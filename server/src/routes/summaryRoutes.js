@@ -46,7 +46,7 @@ router.get('/whatsapp', authenticate, async (req, res) => {
     for (const off of officials) {
       const s = statusMap.get(off._id.toString());
       const state = s ? s.state : 'not_confirmed';
-      const note = s && s.note ? s.note : '';
+      const note = s && s.note && !/^sample demo status$/i.test(s.note.trim()) ? s.note : '';
       counts[state] = (counts[state] || 0) + 1;
 
       if (!courtMap.has(off.court)) {
@@ -64,7 +64,7 @@ router.get('/whatsapp', authenticate, async (req, res) => {
     let text = `*CHAMBERS AVAILABILITY BOARD*\n*${formattedDate}*\n`;
 
     for (const [courtName, items] of courtMap.entries()) {
-      text += `\n*${courtName.toUpperCase()}*\n`;
+      text += `\n🏛️ *${courtName.toUpperCase()}*\n`;
       for (const item of items) {
         const meta = STATE_EMOJI_LABELS[item.state] || STATE_EMOJI_LABELS.not_confirmed;
         text += `\n• *${item.official.name}*\n`;
@@ -73,18 +73,10 @@ router.get('/whatsapp', authenticate, async (req, res) => {
           text += `   📝 ${item.note}\n`;
         }
         if (!item.isToday) {
-          text += `   ⚠️ _Unconfirmed today_\n`;
+          text += `   ⚠️ *Unconfirmed today*\n`;
         }
       }
     }
-
-    text += `\n*SUMMARY*\n`;
-    text += `Available: ${counts.available}\n`;
-    text += `Not sitting: ${counts.not_sitting}\n`;
-    text += `On leave: ${counts.on_leave}\n`;
-    text += `Running late: ${counts.running_late}\n`;
-    text += `Unconfirmed: ${counts.not_confirmed}\n`;
-    text += `_Updated live by Chambers team_`;
 
     res.json({
       summaryText: text,
